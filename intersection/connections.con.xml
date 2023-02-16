@@ -1,0 +1,22 @@
+<connections >
+ <connection from="N-TL" to="TL-S" fromLane="0" toLane="0"/>
+ <connection from="N-TL" to="TL-S" fromLane="1" toLane="1"/>
+ <connection from="N-TL" to="TL-W" fromLane="0" toLane="0"/>
+ <connection from="N-TL" to="TL-E" fromLane="2" toLane="2"/>
+ 
+ <connection from="S-TL" to="TL-N" fromLane="0" toLane="0"/>
+ <connection from="S-TL" to="TL-N" fromLane="1" toLane="1"/>
+ <connection from="S-TL" to="TL-W" fromLane="2" toLane="2"/>
+ <connection from="S-TL" to="TL-E" fromLane="0" toLane="0"/>
+ 
+ <connection from="W-TL" to="TL-E" fromLane="0" toLane="0" />
+ <connection from="W-TL" to="TL-E" fromLane="1" toLane="1" />
+ <connection from="W-TL" to="TL-N" fromLane="2" toLane="2" />
+ <connection from="W-TL" to="TL-S" fromLane="0" toLane="0" />
+
+ <connection from="E-TL" to="TL-W" fromLane="0" toLane="0" />
+ <connection from="E-TL" to="TL-W" fromLane="1" toLane="1" />
+ <connection from="E-TL" to="TL-S" fromLane="2" toLane="2" />
+ <connection from="E-TL" to="TL-N" fromLane="0" toLane="0" />
+
+</connections>

@@ -1,0 +1,13 @@
+<configuration>
+<input>
+ <node-files value="nodes.nod.xml"/>
+ <edge-files value="edges.edg.xml"/>
+ <connection-files value="connections.con.xml"/>
+</input>
+<output>
+    <output-file value="intersection.net.xml"/>
+</output>
+<report>
+     <verbose value="true"/>
+</report>
+</configuration>
