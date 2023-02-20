@@ -15,8 +15,8 @@ class RandomTraffic:
         """generate random traffic based on weibull distribution and assgin them to routes
         """
         random.seed(seed)
-        # ran_gen_value = np.random.weibull(2, self._num_cars_to_generate)
-        ran_gen_value = np.random.uniform(0,1, self._num_cars_to_generate)
+        ran_gen_value = np.random.weibull(2, self._num_cars_to_generate)
+        # ran_gen_value = np.random.uniform(0,1, self._num_cars_to_generate)
         ran_gen_value = np.sort(ran_gen_value)
         
         min_ran_gen_value = math.floor(ran_gen_value[1])
