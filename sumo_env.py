@@ -31,10 +31,12 @@ class Environment:
         
         # start the simulation
         traci.start(self.sumo_cmd)
+        
+        self._waiting_times = {}
          
     def get_state_observation(self):
         """
-        This class will return state observations for each traffic light based on 
+        This class will return the state observations for the traffic light based on 
         the traffic which was generated for this eoisode in the form of a matrix
         """
         # variables to store TL data
@@ -53,10 +55,10 @@ class Environment:
             car_lane_pose = traci.vehicle.getLanePosition(car_id)
             car_lane_id = traci.vehicle.getLaneID(car_id)
             
-            # reversing the position of vehicles, 0 will be the closest 
+            # reversing the position of vehicles, 0 will be the closest to intersection
             car_lane_pose = 500 - car_lane_pose
             
-            # dividing the length of each edge to cells, according to num_cells
+            # dividing the length of each edge to cells, according to num_cells per edge
             if car_lane_pose < 7:
                 lane_cell = 0
             elif car_lane_pose < 14:
@@ -73,12 +75,12 @@ class Environment:
                 lane_cell = 6
             elif car_lane_pose < 300:
                 lane_cell = 7
-            elif car_lane_pose < 700:
+            elif car_lane_pose < 400:
                 lane_cell = 8
-            elif car_lane_pose <= 1000:
+            elif car_lane_pose <= 500:
                 lane_cell = 9
             
-            # get the lane group and whether this incoming road will be a row or column for TL_1
+            # get the lane group and whether this incoming road will be represented as a row or a column
             if car_lane_id in ["E-TL_0", "E-TL_1"]:
                 lane_group, rc = 1, "row"
             elif car_lane_id == "E-TL_2":
@@ -137,19 +139,19 @@ class Environment:
         
         return TL_state       
 
-    def get_waiting_time(self, waiting_times):
+    def get_waiting_time(self):
         
         incomming_roads = ["W-TL", "N-TL", "E-TL", "S-TL"]
         car_list = traci.vehicle.getIDList()
         for car_id in car_list:
             wait_time = traci.vehicle.getAccumulatedWaitingTime(car_id)
             raod_id = traci.vehicle.getRoadID(car_id)
-            if raod_id in incomming_roads:
-                waiting_times[car_id] = wait_time
-            else:
-                if car_id in waiting_times:
-                    del waiting_times[car_id]
-        total_waiting_time = sum(waiting_times.values())
+            if raod_id in incomming_roads: # cars is about to enter the intersection
+                self._waiting_times[car_id] = wait_time
+            else:                          # cars may be in outgoing roads    
+                if car_id in self._waiting_times:  
+                    del self._waiting_times[car_id]
+        total_waiting_time = sum(self._waiting_times.values())
         return total_waiting_time        
         
     def get_queue_length(self):
@@ -186,3 +188,4 @@ class Environment:
             queue_length = self.get_queue_length()
             # self.sum_queue_length += queue_length
             # sum_waiting_time += queue_length
+        return step
