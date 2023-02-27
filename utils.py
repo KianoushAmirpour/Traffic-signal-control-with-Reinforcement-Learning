@@ -4,6 +4,7 @@ import torch
 import random
 import numpy as np
 from sumolib import checkBinary
+import matplotlib.pyplot as plt
 
 def seed_everything(seed: int):
     """
@@ -55,6 +56,9 @@ def make_dir():
     if not os.path.isdir("logs"):
         os.makedirs("logs")
         print("A new directory 'logs' created for tensorboard\n")
+    if not os.path.isdir("plots"):
+        os.makedirs("plots")
+        print("A new directory 'plots' created for tensorboard\n")
 
 
 def get_dir_name(configs, dir):
@@ -68,12 +72,28 @@ def get_dir_name(configs, dir):
         else:
             os.makedirs(f"checkpoints/{experiment_name}")
             return f"checkpoints/{experiment_name}/"     
-    else:
+    elif dir == "logs":
         if os.path.isdir(f"logs/{experiment_name}"):
             return f"logs/{experiment_name}/"
         else:
             os.makedirs(f"logs/{experiment_name}")
             return f"logs/{experiment_name}/"
+    else:
+        if os.path.isdir(f"plots/{experiment_name}"):
+            return f"plots/{experiment_name}/"
+        else:
+            os.makedirs(f"plots/{experiment_name}")
+            return f"plots/{experiment_name}/"
         
+
+def plot(x, y, xlabel, ylabel, title, color, path):
+    plt.figure(figsize=(8,6))
+    plt.plot(x, y, color=color)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.savefig(path)
+    
+
 if __name__ == "__main__":
     sumo_configs(100)
