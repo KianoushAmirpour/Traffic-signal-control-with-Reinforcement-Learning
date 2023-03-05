@@ -9,7 +9,8 @@ from replay_buffer import ReplayBuffer
 
 class Agent:
     def __init__(self, input_channels, num_actions, device, learning_rate, gamma, batch_size,
-                 update_model_weight, target_update_step, writer, buffer_max_size, buffer_min_size, save_model_freq):
+                 update_model_weight, target_update_step, writer, buffer_max_size, buffer_min_size,
+                 checkpoint_freq_save, grad_clip_value, checkpoints_path, tau, optimizer="ADAM", loss_function="Huber"):
 
         self.input_channels = input_channels
         self.num_actions = num_actions
@@ -18,39 +19,63 @@ class Agent:
         self.gamma = gamma
         self.batch_size = batch_size
         self.update_model_weight = update_model_weight
-        self.target_update_step = target_update_step
+        self._target_update_step = target_update_step
         self.writer = writer
         self.buffer_max_size = buffer_max_size
         self.buffer_min_size = buffer_min_size
+        self.grad_clip_value = grad_clip_value
+        self._checkpoints_path = checkpoints_path
+        self._tau = tau
         
         self.memory = ReplayBuffer(self.buffer_max_size, self.buffer_min_size, self.batch_size, self.device)
         
         self.dqn = DQN(self.input_channels, self.num_actions).to(self.device)
         self.target_dqn = DQN(self.input_channels, self.num_actions).to(self.device)
-        self.optimizer = optim.Adam(self.dqn.parameters(), lr=self.learning_rate)
-        self.loss = nn.HuberLoss() 
-        self.checkpoint_freq_save = save_model_freq
+        # self.target_dqn.load_state_dict(self.dqn.state_dict())
         
-        self.losses = [] # to store the values of loss function
-        self._update_model_weight_step = 0 # to count the steps that loss functions is being updated
-        self._update_target_network_step = 0 # to count the steps that is needed to update the target network
-        self.best_reward = -np.inf 
+        if optimizer == "ADAM":
+            self.optimizer = optim.Adam(self.dqn.parameters(), lr=self.learning_rate)
+        elif optimizer == "RMSprop":
+            self.optimizer = optim.RMSprop(self.dqn.parameters(), lr=self.learning_rate)
         
-    def step(self, state, action, reward, next_state):
+        if loss_function == "Huber":   
+            self.loss = nn.HuberLoss()
+        else:
+            self.loss = nn.MSELoss()
+            
+        self.checkpoint_freq_save = checkpoint_freq_save
+        self._update_model_weight_step = 1 # to count the steps that loss functions is being updated
+    
+    def store_experience(self, state, action, reward, next_state, step):
+        
         self.memory.add_experience(state, action, reward, next_state)
+       
+    def step(self): #, state, action, reward, next_state):
         
-        if self._update_model_weight_step %  self.update_model_weight == 0: # update model's weights every self.update_model_weight step(Ex: every 12 steps)
-            if len(self.memory)> self.batch_size: # we update the model's weights when we have enough samples
-                experiences = self.memory.get_sample_from_memory()
-                self.learn(experiences)
+        # self.memory.add_experience(state, action, reward, next_state)
         
-        self._update_model_weight_step += 1
+        # if self._update_model_weight_step %  self.update_model_weight == 0: # update model's weights every self.update_model_weight step(Ex: every 20 steps)
+        if len(self.memory) > self.batch_size: # we update the model's weights when we have enough samples
+            experiences = self.memory.get_sample_from_memory()
+            self.learn(experiences)
         # preodically save the model
         if self._update_model_weight_step % self.checkpoint_freq_save == 0:
             torch.save({'model_state_dict': self.dqn.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()},
-                        f"checkpoints/dqn_update_weight_step_{self._update_model_weight_step}.pth")
-            
+                        f"{self._checkpoints_path}/dqn_updated_at_step_{self._update_model_weight_step}.pth")
+        
+        # updating the target network every self.target_update_step step (EX: every 10000 stepa)
+        if self._update_model_weight_step % self._target_update_step == 0:
+            print(f"Updateing Target Network at {self._update_model_weight_step} step")
+            if self._tau == 1.0:
+                self.target_dqn.load_state_dict(self.dqn.state_dict())
+            else:
+                for target_dqn_param, dqn_param in zip(self.target_dqn.parameters(), self.dqn.parameters()):
+                    target_dqn_param.data.copy_(self._tau * dqn_param.data + (1.0 - self._tau) * target_dqn_param.data)
+        
+        self._update_model_weight_step += 1
+    
     def act(self, state, epsilon):
+        
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device) # input's shape (4, 24, 24) ----> output's shape (1, 4, 24, 24)
         self.dqn.eval() # bc it is just a feedforward without a need to backpropagation
         with torch.no_grad():
@@ -78,23 +103,22 @@ class Agent:
         loss = self.loss(current_state_q_values, target_q_values).to(self.device)
         
         # logging the loss values to tensorboard
-        self.writer.add_scalar("Huber Loss/steps", loss.item(), self._update_model_weight_step)
+        self.writer.add_scalar(f"{str(self.loss)}/update_model_weight", loss.item(), self._update_model_weight_step)
                
         self.optimizer.zero_grad()
         loss.backward()
+        
+        if self.grad_clip_value is not None:  # potentially clip gradients for stability reasons
+            nn.utils.clip_grad_norm_(self.dqn.parameters(), self.grad_clip_value)
+        
         self.optimizer.step()
         
         # logging the gradients of the weights a biases of the self.dqn to tensorboard
         for name, weight_or_bias in self.dqn.named_parameters():
-            self.writer.add_histogram(f'{name}.grad', weight_or_bias.grad, self._update_model_weight_step)
+            self.writer.add_histogram(f'{name}.grad/{str(self.loss)}', weight_or_bias.grad, self._update_model_weight_step)
             grad_l2_norm = weight_or_bias.grad.data.norm(p=2).item()
-            self.writer.add_scalar(f'grad_norms/{name}', grad_l2_norm, self._update_model_weight_step)
+            self.writer.add_scalar(f'grad_norms/{name}/{str(self.loss)}', grad_l2_norm, self._update_model_weight_step)
         
-        # updating the target network every self.target_update_step step (EX: every 1000 stepa)
-        self._update_target_network_step += 1
-        if self._update_target_network_step % self.target_update_step == 0:
-            print("Updateing Target Network")
-            self.target_dqn.load_state_dict(self.dqn.state_dict())
 
         
         
