@@ -38,7 +38,8 @@ def get_args():
     parser.add_argument('--loss_function', type=str, choices=["Huber", "MSE"], default="Huber")
     parser.add_argument('--optimizer', type=str, choices=["ADAM", "RMSprop"], default="ADAM")
     parser.add_argument('--save_model_freq', type=int, default=10000 ,help="saving the model after this steps")
-    parser.add_argument('--TAU', type=float, default=1.0 ,help="how to update target network")
+    parser.add_argument('--TAU', type=float, default=0.001 ,help="how to update target network")
+    parser.add_argument('--DDQN', type=bool, default=True)
     # general 
     parser.add_argument('--device', type=str, default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
     parser.add_argument('--seed', type=int, default=1111 ,help="for reproducibility")
@@ -76,7 +77,7 @@ def train_dqn(configs):
                 configs["input_channels"], configs["num_actions"], configs["device"], configs["learning_rate"],
                 configs["gamma"], configs["batch_size"], configs["update_model_weight"], configs["update_target_step"],
                 writer, configs["buffer_max_size"], configs["buffer_min_size"], configs["save_model_freq"],
-                configs["grad_clip"], checkpoints_path, configs["TAU"], optimizer=configs["optimizer"], loss_function=configs["loss_function"]
+                configs["grad_clip"], checkpoints_path, configs["TAU"], configs["DDQN"], optimizer=configs["optimizer"], loss_function=configs["loss_function"], 
                  )
     
     # will simulate the whole process in sumo 
@@ -104,7 +105,6 @@ def train_dqn(configs):
         old_state = -1 # will store the state  ----> (state, action, reward, new state)
         old_action = -1 # will store the action  ----> (state, action, reward, new state)
         
-        # waiting_times = {}
         sum_neg_reward = 0 # cumulative negative reward for each episode
         cumulative_waiting_times = 0 # cumulative waiting time by all vehicles in each episode
         step = 0
