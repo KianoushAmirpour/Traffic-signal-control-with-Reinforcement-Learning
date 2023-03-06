@@ -10,7 +10,7 @@ from replay_buffer import ReplayBuffer
 class Agent:
     def __init__(self, input_channels, num_actions, device, learning_rate, gamma, batch_size,
                  update_model_weight, target_update_step, writer, buffer_max_size, buffer_min_size,
-                 checkpoint_freq_save, grad_clip_value, checkpoints_path, tau, optimizer="ADAM", loss_function="Huber"):
+                 checkpoint_freq_save, grad_clip_value, checkpoints_path, tau, DDQN, optimizer="ADAM", loss_function="Huber"):
 
         self.input_channels = input_channels
         self.num_actions = num_actions
@@ -26,6 +26,7 @@ class Agent:
         self.grad_clip_value = grad_clip_value
         self._checkpoints_path = checkpoints_path
         self._tau = tau
+        self._DDQN = DDQN
         
         self.memory = ReplayBuffer(self.buffer_max_size, self.buffer_min_size, self.batch_size, self.device)
         
@@ -94,11 +95,16 @@ class Agent:
         self.target_dqn.eval()
 
         current_state_q_values = self.dqn(states).gather(dim=1, index=actions) # output's shape = (bs, 1) , choose Q values that correspond to the actions were made in those states
-
-        with torch.no_grad():
-            next_state_max_q_values = self.target_dqn(next_states).max(dim=1, keepdim=True)[0] # output's shape : (bs , 1)
- 
-            target_q_values = rewards + (self.gamma *  next_state_max_q_values) # calculating the target values
+        new_state_q_values_index = self.dqn(next_states).max(dim=1, keepdim=True)[1] # will be used for DDQN
+        
+        if not self._DDQN:
+            with torch.no_grad():
+                next_state_max_q_values = self.target_dqn(next_states).max(dim=1, keepdim=True)[0] # output's shape : (bs , 1)            
+        else:
+            with torch.no_grad():
+                next_state_max_q_values = self.target_dqn(next_states).gather(dim=1, index=new_state_q_values_index)
+        
+        target_q_values = rewards + (self.gamma *  next_state_max_q_values) # calculating the target values
         
         loss = self.loss(current_state_q_values, target_q_values).to(self.device)
         
