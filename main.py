@@ -39,7 +39,7 @@ def get_args():
     parser.add_argument('--optimizer', type=str, choices=["ADAM", "RMSprop"], default="ADAM")
     parser.add_argument('--save_model_freq', type=int, default=10000 ,help="saving the model after this steps")
     parser.add_argument('--TAU', type=float, default=0.001 ,help="how to update target network")
-    parser.add_argument('--DDQN', type=bool, default=True)
+    parser.add_argument('--DDQN', type=bool, default=False)
     # general 
     parser.add_argument('--device', type=str, default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
     parser.add_argument('--seed', type=int, default=1111 ,help="for reproducibility")
@@ -63,7 +63,7 @@ def train_dqn(configs):
     # seed everything
     # utils.seed_everything(configs["seed"])
 
-    # initializing the tensorboard for loging the statistics
+    # initializing the tensorboard for logging the statistics
     writer = SummaryWriter(logs_path)
     
     # getting the configuration for sumo to be run(whether to open the interface and the path to env.sumocfg file)
@@ -119,11 +119,11 @@ def train_dqn(configs):
             # set the epsilon to be used in epsilon-greedy
             # epsilon = utils.epsilon_schedule(count_steps_for_epsilon)
             
-            # select the action based on the current state and epsilon, output is an intiger indicating the action that has been chosen, ex: 0, 1, 2, 3
+            # select the action based on the current state and epsilon, output is an integer indicating the action that has been chosen, ex: 0, 1, 2, 3
             action = agent.act(current_state, epsilon)
              
-            # calculating the reward as a sum of waiting times (for every car) and lenght of the queues in the incoming roads
-            current_total_waiting_time = env.get_waiting_time() + env.get_queue_length()
+            # calculating the reward as a sum of waiting times (for every car) and length of the queues in the incoming roads
+            current_total_waiting_time = env.get_waiting_time() # + env.get_queue_length()
             cumulative_waiting_times += current_total_waiting_time
             reward = old_total_wait - current_total_waiting_time
             

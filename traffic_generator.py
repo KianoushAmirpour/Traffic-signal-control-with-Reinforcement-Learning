@@ -12,7 +12,7 @@ class RandomTraffic:
 
     def generate_random_traffic(self, seed):
         
-        """generate random traffic based on weibull distribution and assgin them to routes
+        """generate random traffic based on weibull distribution and assign them to routes
         """
         random.seed(seed)
         ran_gen_value = np.random.weibull(2, self._num_cars_to_generate)

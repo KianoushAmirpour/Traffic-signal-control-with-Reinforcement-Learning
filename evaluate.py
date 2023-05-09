@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--input_channels', type=int, default=4, help="number of features to represents the state: num of cars, average speed, waiting times, number of queued cars")
     parser.add_argument('--num_actions', type=int, default=4, help="NS-green, NSL-green, EW-green, EWL-green")
     # simulation params
-    parser.add_argument('--total_num_episode', type=int, default=5)
+    parser.add_argument('--total_num_episode', type=int, default=50)
     parser.add_argument('--yellow_duration', type=int, default=4)
     parser.add_argument('--green_duration', type=int, default=10)
     parser.add_argument('--gui', type=bool, default=False, help="whether to open the sumo-gui or not")
@@ -34,14 +34,14 @@ def get_args():
 
 def evaluate_dqn(configs):
     
-    path_to_model = "./checkpoints/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_True_1111_DDQN/last_dqn.pth"
+    path_to_model = "./checkpoints/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_False_1111_changed_reward/last_dqn.pth"
     model = DQN(configs["input_channels"], configs["num_actions"]).to(configs["device"])
     checkpoint = torch.load(path_to_model)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.cuda().eval()
     
     # get the path for saving the logs and checkpoints based on the name of experiences
-    plots_path = "./plots/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_True_1111_DDQN"
+    plots_path = "./plots/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_False_1111_changed_reward"
     
     # seed everything
     utils.seed_everything(configs["seed"])
@@ -90,7 +90,7 @@ def evaluate_dqn(configs):
             action_values = model(state)
             action = action_values.argmax(dim=1)[0].cpu().numpy()
                 
-            # calculating the reward as a sum of waiting times (for every car) and lenght of the queues in the incoming roads
+            # calculating the reward as a sum of waiting times (for every car) and length of the queues in the incoming roads
             current_total_waiting_time = env.get_waiting_time() + env.get_queue_length()
             cumulative_waiting_times += current_total_waiting_time
             reward = old_total_wait - current_total_waiting_time

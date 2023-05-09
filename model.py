@@ -11,7 +11,7 @@ class DQN(nn.Module):
         num_filters_cnn = [input_channels, 32, 64, 64]
         kernel_size = 3
         
-        # convolutional layers
+        # Convolutional layers
         self.conv1 = nn.Conv2d(input_channels, 32, kernel_size)
         self.conv2 = nn.Conv2d(32, 64, kernel_size)
         self.conv3 = nn.Conv2d(64, 64, kernel_size)

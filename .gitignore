@@ -1,0 +1,7 @@
+__pycache__/
+checkpoints/
+logs/
+log.txt
+intersection/routes.rou.xml
+plots/
+runs/

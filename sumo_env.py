@@ -37,7 +37,7 @@ class Environment:
     def get_state_observation(self):
         """
         This class will return the state observations for the traffic light based on 
-        the traffic which was generated for this eoisode in the form of a matrix
+        the traffic which was generated for this episode in the form of a matrix
         """
         # variables to store TL data
         num_cars = np.zeros((self.num_cells * 2 + 4, self.num_cells * 2 + 4))

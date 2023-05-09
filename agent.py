@@ -59,14 +59,14 @@ class Agent:
         if len(self.memory) > self.batch_size: # we update the model's weights when we have enough samples
             experiences = self.memory.get_sample_from_memory()
             self.learn(experiences)
-        # preodically save the model
+        # periodically save the model
         if self._update_model_weight_step % self.checkpoint_freq_save == 0:
             torch.save({'model_state_dict': self.dqn.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()},
                         f"{self._checkpoints_path}/dqn_updated_at_step_{self._update_model_weight_step}.pth")
         
-        # updating the target network every self.target_update_step step (EX: every 10000 stepa)
+        # updating the target network every self.target_update_step step (EX: every 10000 step)
         if self._update_model_weight_step % self._target_update_step == 0:
-            print(f"Updateing Target Network at {self._update_model_weight_step} step")
+            print(f"Updating Target Network at {self._update_model_weight_step} step")
             if self._tau == 1.0:
                 self.target_dqn.load_state_dict(self.dqn.state_dict())
             else:
@@ -84,9 +84,9 @@ class Agent:
         self.dqn.train()
         
         if random.random() < epsilon:
-            return random.randint(0, self.num_actions -1) # an intiger indicating the action that has been chosen (Explore)
+            return random.randint(0, self.num_actions -1) # an integer indicating the action that has been chosen (Explore)
         else:
-            return action_values.argmax(dim=1)[0].cpu().numpy() # an intiger indicating the action that has been chosen (Exploit)
+            return action_values.argmax(dim=1)[0].cpu().numpy() # an integer indicating the action that has been chosen (Exploit)
         
     def learn(self, experiences):
         states, actions, rewards, next_states = experiences
