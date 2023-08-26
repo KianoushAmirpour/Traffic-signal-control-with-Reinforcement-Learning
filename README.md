@@ -9,7 +9,7 @@ The image below illustrates the characteristics of an intersection in this proje
 - model.py: The DQN class provides a Convolutional Neural Network model used in this project.
 - agent.py: The Agent class manages the process of adding experiences to memory, updating model weights and target networks, and handling exploration-exploitation strategies.
 - replay_buffer.py: The ReplayBuffer class is responsible for retrieving samples from memory and adding new samples to memory.
-- sumo_env.py : This file interfaces with the SUMO traffic simulation tool, collecting state observations from the simulation. The Environment class initiates the simulation, extracting metrics such as the    number of cars, average speeds, queues, and waiting times, and presenting them in a matrix format
+- sumo_env.py : This file interfaces with the `SUMO` traffic simulation tool, collecting state observations from the simulation. The Environment class initiates the simulation, extracting metrics such as the    number of cars, average speeds, queues, and waiting times, and presenting them in a matrix format
 - evaluate.py : The evaluate script assesses the performance of the trained model on a test dataset.
 - traffic_generator.py : The RandomTraffic class generates randomized traffic patterns using a Weibull distribution, allocating 70 percent of traffic for straight movements and 30 percent for turns.
 - main.py :  The main script brings all components together for model training and preservation. It calculates rewards, advances simulation steps, and manages model saving.
