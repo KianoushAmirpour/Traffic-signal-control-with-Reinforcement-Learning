@@ -34,14 +34,14 @@ def get_args():
 
 def evaluate_dqn(configs):
     
-    path_to_model = "./checkpoints/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_False_1111_changed_reward/last_dqn.pth"
+    path_to_model = ""
     model = DQN(configs["input_channels"], configs["num_actions"]).to(configs["device"])
     checkpoint = torch.load(path_to_model)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.cuda().eval()
     
     # get the path for saving the logs and checkpoints based on the name of experiences
-    plots_path = "./plots/2000_5400_10_4_4_1000000_1000_100_4_10_False_32_500_20_0.0002_125_0.95_5_Huber_ADAM_10000_0.001_False_1111_changed_reward"
+    plots_path = ""
     
     # seed everything
     utils.seed_everything(configs["seed"])
