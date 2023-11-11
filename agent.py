@@ -51,7 +51,7 @@ class Agent:
         
         self.memory.add_experience(state, action, reward, next_state)
        
-    def step(self): #, state, action, reward, next_state):
+    def step(self): # (state, action, reward, next_state):
         
         # self.memory.add_experience(state, action, reward, next_state)
         
